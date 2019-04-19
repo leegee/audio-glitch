@@ -29,21 +29,26 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
                 return reject(new Error('only supports wav files input'));
             }
 
-            // load audio file
-            const buffer = await this.reader.loadBuffer(inFilePaths);
-            // get buffer chunk
-            let metaBuffer = this.reader.interpretHeaders(buffer);
-
             // get chunk path radical and extension
-            let inPath = inFilePaths.substr(0, inFilePaths.lastIndexOf('/') + 1);
-            let inFileName = inFilePath.split("/").pop();
-            let inFileRadical = inFileName.substr(0, inFileName.lastIndexOf("."));
-            let extension = inFileExtension;
+            const inPath = inFilePaths[0].substr(0, inFilePaths.lastIndexOf('/') + 1);
+            const inFileName = inFilePath.split("/").pop();
+            const inFileRadical = inFileName.substr(0, inFileName.lastIndexOf("."));
+            const extension = inFileExtension;
             // create sub-directory to store sliced files
-            let storeDirPath = inPath + inFileRadical;
-            if (!fs.existsSync(storeDirPath)) { 
-                fs.mkdirSync(storeDirPath); 
+            const storeDirPath = inPath + inFileRadical;
+            if (!fs.existsSync(storeDirPath)) {
+                fs.mkdirSync(storeDirPath);
             }
+
+            // load audio file
+            const buffers = [];
+            inFilePaths.forEach(async (inFilePath) =>  {
+                const buffer = await this.reader.loadBuffer(inFilePath);
+                buffers.push(buffer);
+            });
+
+            // get buffer chunk
+            let metaBuffer = this.reader.interpretHeaders(buffers[0]);
 
             // init slicing loop 
             let totalDuration = metaBuffer.dataLength / metaBuffer.secToByteFactor;
@@ -82,7 +87,7 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
                     }
 
                     // keep track off init dta start offset
-                    else { 
+                    else {
                         initStartBitOffset = chunkStartBitIndex % metaBuffer.bitPerSample;
                     }
 
@@ -123,7 +128,7 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
         else {
             throw new RangeError('Fetched index greater than data end index:' + chunkEnd + ', ' + (metaBuffer.dataStart + metaBuffer.dataLength))
         }
-        
+
         // update data length descriptor in head buffer
         headBuffer.writeUIntLE(dataBuffer.length, headBuffer.length - BYTE_LENGTH, BYTE_LENGTH);
 
