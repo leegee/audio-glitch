@@ -7,12 +7,11 @@ const BYTE_LENGTH = 4;
 exports.MIDIslicer = class MIDIslicer extends Slicer {
     constructor(options = {}) {
         super(options);
-
+        this.log = !options.log ? console.log : () => { };
         if (!options.durations) {
             throw new TypeError('Missing durations argument');
         }
-
-        this.tmpPath = (options.tmpPath !== undefined) ? options.tmpPath : undefined;
+        this.inFilePaths = options.waveFilePaths;
         // this.chunkDuration = (options.duration !== undefined) ? options.duration : 4; // chunk duration, in seconds
         this.chunkDurations = options.durations;
         this.overlapDuration = (options.overlap !== undefined) ? options.overlap : 0; // overlap duration, in seconds
@@ -20,16 +19,16 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
     }
 
     /** No longer takes a callback but returns a Promise<chunklist>. Only supports wav */
-    slice(inFilePaths) {
-        return new Promise((resolve, reject) => {
-            var inFileExtension = inFilePaths[0].split(".").pop();
+    slice() {
+        return new Promise(async (resolve, reject) => {
+            var inFileExtension = this.inFilePaths[0].split(".").pop();
             if (inFileExtension !== 'wav') {
                 return reject(new Error('only supports wav files input'));
             }
 
             // get chunk path radical and extension
-            const inPath = inFilePaths[0].substr(0, inFilePaths.lastIndexOf('/') + 1);
-            const inFileName = inFilePaths[0].split("/").pop();
+            const inPath = this.inFilePaths[0].substr(0, this.inFilePaths.lastIndexOf('/') + 1);
+            const inFileName = this.inFilePaths[0].split("/").pop();
             const inFileRadical = inFileName.substr(0, inFileName.lastIndexOf("."));
             const extension = inFileExtension;
             // create sub-directory to store sliced files
@@ -40,14 +39,17 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
 
             const metaBuffers = []; // get buffer chunk
 
-            inFilePaths.forEach(async (inFilePath) => {
-                const buffer = await this.reader.loadBuffer(inFilePath);
+            await this.inFilePaths.forEach((inFilePath) => {
+                this.log('inFilePath', inFilePath);
+                const buffer = this.reader.loadBuffer(inFilePath);
+                this.log('buffer', buffer);
                 const metaBuffer = this.reader.interpretHeaders(buffer);
+                this.log('metaBuffer', metaBuffer);
                 metaBuffers.push(metaBuffer);
             });
 
             // init slicing loop 
-            let totalDuration = metaBuffer[0].dataLength / metaBuffer.secToByteFactor;
+            let totalDuration = metaBuffers[0].dataLength / metaBuffers[0].secToByteFactor;
             let chunkStartTime = 0;
             // let chunkDuration = this.chunkDuration;
             let chunkIndex = 0;
@@ -58,8 +60,8 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
             let metaBufferIndex = 0;
 
             this.chunkDurations.forEach((chunkDuration) => {
-                const metaBuffer = metaBuffers[ metaBufferIndex ];
-                console.log('workingBufferIndex %d', metaBufferIndex);
+                const metaBuffer = metaBuffers[metaBufferIndex];
+                this.log('workingBufferIndex %d', metaBufferIndex);
 
                 // slicing loop
                 while (chunkStartTime < totalDuration) {
@@ -151,13 +153,13 @@ class Reader {
         this.wavFormatReader = new WavFormatReader();
     }
 
-    async loadBuffer(filePath) {
+    loadBuffer(filePath) {
         return fs.readFileSync(filePath);
     }
 
     interpretHeaders(buffer) {
         let wavInfo = this.wavFormatReader.getWavInfos(buffer);
-        let metaBuffer = {
+        return {
             buffer: buffer,
             dataStart: wavInfo.descriptors.get('data').start,
             dataLength: wavInfo.descriptors.get('data').length,
@@ -166,8 +168,6 @@ class Reader {
             secToByteFactor: wavInfo.format.secToByteFactor,
             bitPerSample: wavInfo.format.bitPerSample,
         };
-        // resolve
-        return metaBuffer;
     }
 }
 
