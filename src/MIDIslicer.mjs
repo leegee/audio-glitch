@@ -40,15 +40,14 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
                 fs.mkdirSync(storeDirPath);
             }
 
-            // load audio file
-            const buffers = [];
-            inFilePaths.forEach(async (inFilePath) =>  {
-                const buffer = await this.reader.loadBuffer(inFilePath);
-                buffers.push(buffer);
-            });
 
-            // get buffer chunk
-            let metaBuffer = this.reader.interpretHeaders(buffers[0]);
+            const metaBuffers = []; // get buffer chunk
+
+            inFilePaths.forEach(async (inFilePath) => {
+                const buffer = await this.reader.loadBuffer(inFilePath);
+                const metaBuffer = this.reader.interpretHeaders(buffer);
+                metaBuffers.push(metaBuffer);
+            });
 
             // init slicing loop 
             let totalDuration = metaBuffer.dataLength / metaBuffer.secToByteFactor;
