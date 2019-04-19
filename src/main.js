@@ -27,9 +27,9 @@ const events = midi.track[0].event
 
 const durations = [1000];
 
-console.log( events );
+console.dir('Events:', events );
 
-// let slicer = new MIDIslicer({ durations });
-// slicer.slice(input.wavs).then( (chunkList) => {
-//     console.log('done', chunkList);
-// });
+let slicer = new MIDIslicer({ durations });
+slicer.slice(input.wavs).then( (chunkList) => {
+    console.log('done', chunkList);
+});

@@ -1,8 +1,6 @@
 const fs = require("fs");
-const Lame = require("node-lame").Lame;
-const StringDecoder = require('string_decoder').StringDecoder;
-
 const Slicer = require("node-audio-slicer").Slicer;
+const WavFormatReader = require("./WavFormatReader.mjs").WavFormatReader;
 
 const BYTE_LENGTH = 4;
 
@@ -31,7 +29,7 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
 
             // get chunk path radical and extension
             const inPath = inFilePaths[0].substr(0, inFilePaths.lastIndexOf('/') + 1);
-            const inFileName = inFilePath.split("/").pop();
+            const inFileName = inFilePaths[0].split("/").pop();
             const inFileRadical = inFileName.substr(0, inFileName.lastIndexOf("."));
             const extension = inFileExtension;
             // create sub-directory to store sliced files
@@ -39,7 +37,6 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
             if (!fs.existsSync(storeDirPath)) {
                 fs.mkdirSync(storeDirPath);
             }
-
 
             const metaBuffers = []; // get buffer chunk
 
@@ -50,7 +47,7 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
             });
 
             // init slicing loop 
-            let totalDuration = metaBuffer.dataLength / metaBuffer.secToByteFactor;
+            let totalDuration = metaBuffer[0].dataLength / metaBuffer.secToByteFactor;
             let chunkStartTime = 0;
             // let chunkDuration = this.chunkDuration;
             let chunkIndex = 0;
