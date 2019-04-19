@@ -1,24 +1,21 @@
 {
   "name": "glitch",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "0.1.0",
+  "description": "Uses the rhythm from a MIDI file to slice a number of WAV files.",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "bin": {
+    "hello": "./hello.js"
+  },
+  "keywords": ["glitch", "audio", "midi"],
+  "author": "Lee Goddard",
   "license": "ISC",
   "dependencies": {
     "midi-parser-js": "^3.1.7",
     "node-audio-slicer": "0.0.7"
   },
   "devDependencies": {
-    "eslint": "^5.16.0",
-    "eslint-config-standard": "^12.0.0",
-    "eslint-plugin-import": "^2.17.2",
-    "eslint-plugin-node": "^8.0.1",
-    "eslint-plugin-promise": "^4.1.1",
-    "eslint-plugin-standard": "^4.0.0"
   }
 }

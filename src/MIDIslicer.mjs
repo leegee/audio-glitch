@@ -1,4 +1,5 @@
-const fs = require("fs");
+const fs = require('fs')
+const MidiParser = require('midi-parser-js/src/midi-parser');
 const Slicer = require("node-audio-slicer").Slicer;
 const WavFormatReader = require("./WavFormatReader.mjs").WavFormatReader;
 
@@ -8,14 +9,32 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
     constructor(options = {}) {
         super(options);
         this.log = !options.log ? console.log : () => { };
-        if (!options.durations) {
-            throw new TypeError('Missing durations argument');
+        if (!options.midi) {
+            throw new TypeError('Missing midi argument');
+        }
+        if (!options.waveFilePaths) {
+            throw new TypeError('Missing waveFilePaths argument');
         }
         this.inFilePaths = options.waveFilePaths;
         // this.chunkDuration = (options.duration !== undefined) ? options.duration : 4; // chunk duration, in seconds
-        this.chunkDurations = options.durations;
-        this.overlapDuration = (options.overlap !== undefined) ? options.overlap : 0; // overlap duration, in seconds
         this.reader = new Reader();
+
+        const MIDI = MidiParser.parse(fs.readFileSync(options.midi, 'base64'));
+        const TIME_DIVISION = MIDI.timeDivision;
+        const PPQ = TIME_DIVISION * 4 * 60; // timeDivision * input.bpm / 60 / 4;
+
+        console.log('timeDivision', TIME_DIVISION, 'PPQ', PPQ, 'ms per crotchet');
+
+        // Just the track 1 note on events for any channel
+        const EVENTS = MIDI.track[0].event
+            .filter(v => v.type === 9 && v)
+            .sort((a, b) => a.deltaTime > b.deltaTime ? 1 : -1)
+            .map(v => v.deltaTime);
+
+            this.chunkDurations = [1000, 500, 250];
+
+        console.dir('Events:', EVENTS);
+
     }
 
     /** No longer takes a callback but returns a Promise<chunklist>. Only supports wav */
@@ -73,8 +92,8 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
                     let chunkPath = storeDirPath + '/' + chunkIndex + '-' + inFileRadical + '.' + extension;
 
                     // define start / end offset to take into account 
-                    let startOffset = (chunkStartTime === 0) ? 0 : this.overlapDuration;
-                    let endOffset = ((chunkStartTime + chunkDuration + this.overlapDuration) < totalDuration) ? this.overlapDuration : 0;
+                    let startOffset = 0;
+                    let endOffset = 0;
                     let chunkStartBitIndex = metaBuffer.dataStart + (chunkStartTime - startOffset) * metaBuffer.secToByteFactor;
                     let chunkEndBitIndex = chunkStartBitIndex + (chunkDuration + endOffset) * metaBuffer.secToByteFactor;
 
