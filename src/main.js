@@ -5,8 +5,8 @@ const MIDIslicer = require("./MIDIslicer.mjs").MIDIslicer;
 
 const input = {
     bpm: 60,
-    mid: 'test.mid',
-    wavs: ['oud1.wav','oud1.wav','oud1.wav']
+    mid: 'eg/test.mid',
+    wavs: ['eg/1.wav','eg/2.wav','eg/3.wav']
 }
 
 

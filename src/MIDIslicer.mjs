@@ -58,7 +58,12 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
             let chunkList = [];
             let initStartBitOffset = 0;
 
-            this.chunkDurations.forEach(chunkDuration => {
+            let metaBufferIndex = 0;
+
+            this.chunkDurations.forEach((chunkDuration) => {
+                const metaBuffer = metaBuffers[ metaBufferIndex ];
+                console.log('workingBufferIndex %d', metaBufferIndex);
+
                 // slicing loop
                 while (chunkStartTime < totalDuration) {
 
@@ -94,18 +99,22 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
                     let chunkBuffer = this.getChunk(metaBuffer, chunkStartBitIndex, chunkEndBitIndex);
 
 
-                    fs.writeFile(chunkPath, chunkBuffer, (err) => {
-                        if (err) { return reject(err); }
-                        // to be able to tell when to call the output callback:
-                        totalEncodedTime += this.chunkDuration;
-                        // run arg callback only at encoding's very end
-                        if (totalEncodedTime >= totalDuration) { return resolve(chunkList); }
-                    });
+                    fs.writeFileSync(chunkPath, chunkBuffer);
+                    // to be able to tell when to call the output callback:
+                    totalEncodedTime += this.chunkDuration;
+                    // run arg callback only at encoding's very end
+                    if (totalEncodedTime >= totalDuration) {
+                        resolve(chunkList);
+                    }
 
-                    // incr.
+                    // increment
                     chunkList.push({ name: chunkPath, start: chunkStartTime, duration: chunkDuration, overlapStart: startOffset, overlapEnd: endOffset });
                     chunkIndex += 1;
                     chunkStartTime += this.chunkDuration;
+                    metaBufferIndex++;
+                    if (metaBufferIndex === metaBuffers.length) {
+                        metaBufferIndex = 0;
+                    }
                 }
             });
         });
