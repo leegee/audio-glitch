@@ -1,8 +1,8 @@
 const StringDecoder = require('string_decoder').StringDecoder;
 
 const _createClass = (
-  function () {
-    function defineProperties (target, props) {
+  function() {
+    function defineProperties(target, props) {
       for (var i = 0; i < props.length; i++) {
         var descriptor = props[i];
         descriptor.enumerable = descriptor.enumerable || false;
@@ -11,13 +11,13 @@ const _createClass = (
         Object.defineProperty(target, descriptor.key, descriptor);
       }
     }
-    return function (Constructor, protoProps, staticProps) {
+    return function(Constructor, protoProps, staticProps) {
       if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor;
     };
   }()
 );
 
-function _classCallCheck (instance, Constructor) {
+function _classCallCheck(instance, Constructor) {
   if (!(instance instanceof Constructor)) {
     throw new TypeError('Cannot call a class as a function');
   }
@@ -25,9 +25,9 @@ function _classCallCheck (instance, Constructor) {
 
 const BYTE_LENGTH = 4;
 
-exports.WavFormatReader = (function () {
+exports.WavFormatReader = (function() {
   class WavFormatReader {
-    constructor () {
+    constructor() {
       _classCallCheck(this, WavFormatReader);
       this.stringDecoder = new StringDecoder('utf8');
     }
@@ -35,7 +35,7 @@ exports.WavFormatReader = (function () {
 
   _createClass(WavFormatReader, [{
     key: 'getWavInfos',
-    value: function getWavInfos (buffer) {
+    value: function getWavInfos(buffer) {
       // console.log('input buffer length', buffer.length);
       // get header descriptors
       var descriptors = this.getWavDescriptors(buffer);
@@ -49,7 +49,7 @@ exports.WavFormatReader = (function () {
 
   }, {
     key: 'getWavFormat',
-    value: function getWavFormat (descriptors, buffer) {
+    value: function getWavFormat(descriptors, buffer) {
       var fmt = descriptors.get('fmt ');
       var format = {
         type: buffer.readUIntLE(fmt.start, 2),
@@ -64,7 +64,7 @@ exports.WavFormatReader = (function () {
     }
   }, {
     key: 'getWavDescriptors',
-    value: function getWavDescriptors (buffer) {
+    value: function getWavDescriptors(buffer) {
       // init header read
       var index = 0;
       var descriptor = '';
