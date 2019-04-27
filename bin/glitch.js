@@ -21,6 +21,6 @@ new MIDIslicer({
   waveFilePaths: args.wav
 }).slice().then(finalPath => {
   process.stdout.write('Glitch file at ',
-    path.normalize(finalPath)
+    path.resolve(finalPath)
   )
 });

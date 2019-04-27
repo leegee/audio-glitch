@@ -19,5 +19,5 @@ let slicer = new MIDIslicer({
 });
 
 slicer.slice().then(finalPath => {
-  console.log('Glitch file at ', path.normalize(finalPath));
+  console.log('Glitch file at ', path.resolve(finalPath));
 });
