@@ -1,1 +1,1 @@
-exports.MIDIslicer = require('./MIDIslicer.mjs').MIDIslicer;
+module.exports = require('./MIDIslicer.mjs');

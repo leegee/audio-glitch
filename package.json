@@ -1,7 +1,11 @@
 {
   "name": "audio-glitch",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Uses the rhythm from a MIDI file to slice a number of WAV files.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leegee/audio-glitch.git"
+  },
   "main": "src/index.js",
   "scripts": {
     "test": "mocha src/*.spec.js"
