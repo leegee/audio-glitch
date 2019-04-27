@@ -1,19 +1,18 @@
+/* global BigInt */
 const fs = require('fs');
 const MidiParser = require('midi-parser-js/src/midi-parser');
-const Slicer = require('node-audio-slicer').Slicer;
-const WavFormatReader = require('./WavFormatReader.mjs').WavFormatReader;
+const Reader = require('./Reader.mjs');
 
 const USE_ORIG_HEADER = false;
 
-exports.MIDIslicer = class MIDIslicer extends Slicer {
-
+exports.MIDIslicer = class MIDIslicer {
   /**
    * @param {Object} options
    * @param {string?} options.output
    * @param {string|array} options.midi - path to midi or array of floats for beats
    */
   constructor(options = {}) {
-    super(options);
+    // super(options);
     this.log = !options.log ? console.log : () => { };
     if (!options.midi) {
       throw new TypeError('Missing midi argument to describe the path to the MIDI "beat" file.');
@@ -210,30 +209,3 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
     this.headBuffer.writeUIntLE(this.collectedBuffer.length, 40, 4);
   }
 };
-
-class Reader {
-  constructor() {
-    this.wavFormatReader = new WavFormatReader();
-  }
-
-  loadMetaBuffer(filePath) {
-    this.filePath = filePath;
-    const buffer = fs.readFileSync(filePath);
-
-    let wavInfo = this.wavFormatReader.getWavInfos(buffer, { encoding: 'binary' });
-    console.log('data starts at ', wavInfo.descriptors.get('data').start, ' for ', wavInfo.descriptors.get('data').length);
-    return {
-      filePath: this.filePath,
-      buffer: buffer,
-      dataStart: wavInfo.descriptors.get('data').start,
-      dataLength: wavInfo.descriptors.get('data').length,
-      numberOfChannels: wavInfo.format.numberOfChannels,
-      sampleRate: wavInfo.format.sampleRate,
-      secToByteFactor: wavInfo.format.secToByteFactor,
-      bitPerSample: wavInfo.format.bitPerSample
-    };
-  }
-
-  interpretHeaders(buffer) {
-  }
-}

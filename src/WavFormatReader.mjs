@@ -1,14 +1,8 @@
-const StringDecoder = require('string_decoder').StringDecoder;
-
 const BYTE_LENGTH = 4;
 
 // format info, see http://www.topherlee.com/software/pcm-tut-wavformat.html
 
-exports.WavFormatReader = class WavFormatReader {
-  constructor() {
-    this.stringDecoder = new StringDecoder('utf8');
-  }
-
+module.exports = class WavFormatReader {
   getWavInfos(buffer) {
     // console.log('input buffer length', buffer.length);
     // get header descriptors
@@ -17,7 +11,6 @@ exports.WavFormatReader = class WavFormatReader {
     var format = this.getWavFormat(descriptors, buffer);
     return { descriptors, format };
   }
-
 
   getWavFormat(descriptors, buffer) {
     var fmt = descriptors.get('fmt ');
@@ -34,45 +27,42 @@ exports.WavFormatReader = class WavFormatReader {
   }
 
   getWavDescriptors(buffer) {
-    var index = 0;
+    let index = 0;
     var descriptor = '';
     var chunkLength = 0;
     var descriptors = new Map();
 
     // search for buffer descriptors
-    while (true) {
+    while (index < buffer.length - 1) {
       // read chunk descriptor
-      var bytes = buffer.slice(index, index + BYTE_LENGTH);
-      descriptor = this.stringDecoder.write(bytes);
+      descriptor = buffer.slice(index, index + BYTE_LENGTH).toString();
 
       // special case for RIFF descriptor (header, fixed length)
       if (descriptor === 'RIFF') {
         // read RIFF descriptor
         chunkLength = 3 * BYTE_LENGTH;
-        descriptors.set(descriptor, { start: index + BYTE_LENGTH, length: chunkLength });
+        descriptors.set(descriptor, {
+          start: index + BYTE_LENGTH,
+          length: chunkLength
+        });
         // first subchunk will always be at byte 12
         index += chunkLength;
       }
+
       else {
         // account for descriptor length
         index += BYTE_LENGTH;
 
         chunkLength = buffer.readUIntLE(index, BYTE_LENGTH);
 
-        // fill in descriptor map
         descriptors.set(descriptor, {
           start: index + BYTE_LENGTH,
           length: chunkLength
         });
 
-        // increment read index
         index += chunkLength + BYTE_LENGTH;
       }
-
-      // stop loop when reached buffer end
-      if (index >= buffer.length - 1) {
-        return descriptors;
-      }
     }
+    return descriptors;
   }
-}
+};
