@@ -15,10 +15,10 @@ exports.MIDIslicer = class MIDIslicer {
     // super(options);
     this.log = !options.log ? console.log : () => { };
     if (!options.midi) {
-      throw new TypeError('Missing midi argument to describe the path to the MIDI "beat" file.');
+      throw new TypeError('Missing midi argument: use a string to describe the path to the MIDI "beat" file, or supply beats as an array of numbers.');
     }
     if (!options.waveFilePaths) {
-      throw new TypeError('Missing waveFilePaths argument to describe paths to the wave files.');
+      throw new TypeError('Missing waveFilePaths array argument to describe path(s) to the wave files.');
     }
     options.bpm = options.bpm || 120;
     this.midiFilePath = options.midi;
@@ -138,7 +138,7 @@ exports.MIDIslicer = class MIDIslicer {
     chunkEndBitIndex = initEndBitOffset +
       (Math.floor(chunkEndBitIndex / metaBuffer.bitPerSample) * metaBuffer.bitPerSample);
 
-    chunkEndBitIndex = Math.ceil(chunkEndBitIndex / metaBuffer.bitPerSample) * metaBuffer.bitPerSample;
+    // chunkEndBitIndex = Math.ceil(chunkEndBitIndex / metaBuffer.bitPerSample) * metaBuffer.bitPerSample;
     // reduce if above file duration
     chunkEndBitIndex = Math.min(chunkEndBitIndex, metaBuffer.dataStart + metaBuffer.dataLength);
 
