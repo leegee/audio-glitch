@@ -1,5 +1,5 @@
 {
-  "name": "glitch",
+  "name": "audio-glitch",
   "version": "0.1.0",
   "description": "Uses the rhythm from a MIDI file to slice a number of WAV files.",
   "main": "src/index.js",
@@ -13,13 +13,23 @@
   "bin": {
     "hello": "./hello.js"
   },
-  "keywords": ["glitch", "audio", "midi"],
+  "keywords": [
+    "audio",
+    "chop",
+    "glitch",
+    "glitchhop",
+    "merge",
+    "midi",
+    "riff",
+    "slice",
+    "splice",
+    "wav",
+    "wave"
+  ],
   "author": "Lee Goddard",
   "license": "ISC",
   "dependencies": {
-    "midi-parser-js": "^3.1.7",
-    "node-audio-slicer": "0.0.7"
+    "midi-parser-js": "^3.1.7"
   },
-  "devDependencies": {
-  }
+  "devDependencies": {}
 }

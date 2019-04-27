@@ -1,6 +1,6 @@
 # Glitch
 
-Uses the rhythm from a MIDI file to slice a number of WAV files.
+Uses the rhythm from a MIDI file to slice and merge a number of WAV files.
 
 Reads just the track 0 note-on events of any channel.
 
