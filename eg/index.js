@@ -1,4 +1,5 @@
-const MIDIslicer = require('../src/MIDIslicer.mjs').MIDIslicer;
+const path = require('path');
+const MIDIslicer = require('../src/MIDIslicer.mjs');
 
 const args = {
   verbose: true,
@@ -17,6 +18,6 @@ let slicer = new MIDIslicer({
   output: args.output
 });
 
-slicer.slice().then((filename) => {
-  console.log('Done: ', filename);
+slicer.slice().then(finalPath => {
+  console.log('Glitch file at ', path.normalize(finalPath));
 });

@@ -1,6 +1,6 @@
 const minimist = require('minimist');
-
-const MIDIslicer = require('../src/MIDIslicer.mjs').MIDIslicer;
+const path = require('path');
+const MIDIslicer = require('../src/MIDIslicer.mjs');
 
 const args = minimist(process.argv.slice(2), {
   string: ['bpm', 'midi', 'wav', 'output'],
@@ -17,7 +17,10 @@ const args = minimist(process.argv.slice(2), {
 new MIDIslicer({
   midi: args.midi,
   verbose: args.verbose,
+  output: args.output,
   waveFilePaths: args.wav
-}).slice().then(() => {
-  process.stdout.write('Done.\n')
+}).slice().then(finalPath => {
+  process.stdout.write('Glitch file at ',
+    path.normalize(finalPath)
+  )
 });

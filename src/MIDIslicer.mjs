@@ -5,7 +5,7 @@ const Reader = require('./Reader.mjs');
 
 const USE_ORIG_HEADER = false;
 
-exports.MIDIslicer = class MIDIslicer {
+module.exports = class MIDIslicer {
   /**
    * @param {Object} options
    * @param {string?} options.output
