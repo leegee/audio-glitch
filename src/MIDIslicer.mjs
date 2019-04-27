@@ -8,12 +8,14 @@ const USE_ORIG_HEADER = false;
 module.exports = class MIDIslicer {
   /**
    * @param {Object} options
+   * @param {boolean} options.verbose
+   * @param {number=120} options.bpm
    * @param {string?} options.output
    * @param {string|array} options.midi - path to midi or array of floats for beats
    */
   constructor(options = {}) {
     // super(options);
-    this.log = !options.log ? console.log : () => { };
+    this.log = options.verbose ? console.log : () => { };
     if (!options.midi) {
       throw new TypeError('Missing midi argument: use a string to describe the path to the MIDI "beat" file, or supply beats as an array of numbers.');
     }
@@ -156,12 +158,12 @@ module.exports = class MIDIslicer {
         this.collectedBuffer.length + dataBuffer.length
       );
 
-    console.log('X1: ', this.chunkStartInSeconds, chunkDurationInSeconds);
     this.chunkStartInSeconds += chunkDurationInSeconds;
-    console.log('X2: ', this.chunkStartInSeconds);
 
     this.log('Copied', metaBuffer.filePath, this.chunkStartInSeconds, 'of', this.totalDurationInSeconds);
-    console.assert(this.chunkStartInSeconds > this.totalDurationInSeconds, 'Internal chunk timing error');
+    console.assert(this.chunkStartInSeconds <= this.totalDurationInSeconds,
+      'Internal chunk timing error! chunkStart exceeds totalDuration: ' + this.chunkStartInSeconds + ' > ' + this.totalDurationInSeconds
+    );
   }
 
   _setHeader() {
@@ -172,40 +174,22 @@ module.exports = class MIDIslicer {
     this.log('\nWriting ', BIT_DEPTH, ' bit at ', this.metaBuffers[0].sampleRate, 'hz');
 
     this.headBuffer.write('RIFF', 0);
-    // Buffer.from('RIFF').copy(this.headBuffer, 0);
-
     this.headBuffer.writeUIntLE(FILE_SIZE - 8, 4, 4);
-
     this.headBuffer.write('WAVE', 8);
-    // Buffer.from('WAVE').copy(this.headBuffer, 8);
-
     this.headBuffer.write('fmt ', 12); // Init 'format' section
-    // Buffer.from('fmt ').copy(this.headBuffer, 12);
-
     this.headBuffer.writeUIntLE(16, 16, 4); // Length of format data - always 16
     this.headBuffer.writeUIntLE(1, 20, 2); // Type: PCM
     this.headBuffer.writeUIntLE(this.metaBuffers[0].numberOfChannels, 22, 2);
-
-    // this.headBuffer.writeUIntLE(this.metaBuffers[0].sampleRate, 24, 2);
     this.headBuffer.writeBigUInt64LE(BigInt(this.metaBuffers[0].sampleRate), 24, 2);
-
-    // this.headBuffer.writeUIntLE(
-    //   (this.metaBuffers[0].sampleRate * BIT_DEPTH * this.metaBuffers[0].numberOfChannels) / 8,
-    //   28, 4
-    // );
     this.headBuffer.writeBigUInt64LE(
       BigInt(
         (this.metaBuffers[0].sampleRate * BIT_DEPTH * this.metaBuffers[0].numberOfChannels) / 8
       ),
       28, 4
     );
-
     this.headBuffer.writeUIntLE((BIT_DEPTH * this.metaBuffers[0].numberOfChannels) / 8, 32, 2);
     this.headBuffer.writeUIntLE(this.metaBuffers[0].bitPerSample, 34, 2);
-
     this.headBuffer.write('data', 36); // Init 'data' section
-    // Buffer.from('data').copy(this.headBuffer, 36);
-
     this.headBuffer.writeUIntLE(this.collectedBuffer.length, 40, 4);
   }
 };

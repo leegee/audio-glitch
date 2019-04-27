@@ -4,7 +4,7 @@
   "description": "Uses the rhythm from a MIDI file to slice a number of WAV files.",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha src/*.spec.js"
   },
   "engineStrict": false,
   "engines": {
@@ -31,5 +31,9 @@
   "dependencies": {
     "midi-parser-js": "^3.1.7"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "eslint-config-standard": "^12.0.0",
+    "mocha": "^6.1.4"
+  }
 }

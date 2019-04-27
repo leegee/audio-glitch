@@ -2,7 +2,7 @@ const path = require('path');
 const MIDIslicer = require('../src/MIDIslicer.mjs');
 
 const args = {
-  verbose: true,
+  verbose: false,
   bpm: 100,
   // midi: 'eg/test.mid',
   midi: [1, 1, 1, 1],
