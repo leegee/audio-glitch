@@ -14,14 +14,17 @@ module.exports = class MIDIslicer {
    * @param {string|array} options.midi - path to midi or array of floats for beats
    */
   constructor(options = {}) {
-    // super(options);
-    this.log = options.verbose ? console.log : () => { };
     if (!options.midi) {
       throw new TypeError('Missing midi argument: use a string to describe the path to the MIDI "beat" file, or supply beats as an array of numbers.');
     }
     if (!options.wav) {
       throw new TypeError('Missing wav array argument to describe path(s) to the wave files.');
     }
+    if (typeof options.wav === 'string') {
+      options.wav = [options.wav];
+    }
+
+    this.log = options.verbose ? console.log : () => { };
     options.bpm = options.bpm || 120;
     this.midiFilePath = options.midi;
     this.wav = options.wav;
@@ -71,10 +74,12 @@ module.exports = class MIDIslicer {
       }
       this.metaBuffers.push(metaBuffer);
     });
-    this.log(this.metaBuffers);
+
+    this.totalDurationInSeconds = this.metaBuffers[0].dataLength / this.metaBuffers[0].secToByteFactor;
 
     this.log('\n--------------------------\n');
-    this.totalDurationInSeconds = this.metaBuffers[0].dataLength / this.metaBuffers[0].secToByteFactor;
+    this.log(this.metaBuffers);
+    this.log('\n--------------------------\n');
     this.log('chunkDurations', this.chunkDurationsInSeconds);
     this.log('totalDurationInSeconds: ', this.totalDurationInSeconds);
     this.log('\n--------------------------\n');
