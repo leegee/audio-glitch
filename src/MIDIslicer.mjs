@@ -21,37 +21,49 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
     this.waveFilePaths = options.waveFilePaths;
     this.reader = new Reader();
 
-    const midi = MidiParser.parse(fs.readFileSync(options.midi, 'base64'));
-    const ppq = midi.timeDivision;
-    // Er, wtf? Not the spec.... '*2'??
-    const timeFactor = (60000 / (options.bpm * ppq) / 1000) * 2;
+    if (typeof options.midi === 'string') {
+      const midi = MidiParser.parse(fs.readFileSync(options.midi, 'base64'));
+      const ppq = midi.timeDivision;
+      // Er, wtf? Not the spec.... '*2'??
+      const timeFactor = (60000 / (options.bpm * ppq) / 1000) * 2;
 
-    this.log('bpm:', options.bpm);
-    this.log('ppq:', ppq);
-    this.log('(options.bpm * ppq)', (options.bpm * ppq));
-    this.log('MIDI.timeDivision', midi.timeDivision);
-    this.log('timeFactor', timeFactor);
+      this.log('bpm:', options.bpm);
+      this.log('ppq:', ppq);
+      this.log('(options.bpm * ppq)', (options.bpm * ppq));
+      this.log('MIDI.timeDivision', midi.timeDivision);
+      this.log('timeFactor', timeFactor);
 
-    // Just the track 1 note on events for any channel
-    this.chunkDurationsInSeconds = midi.track[0].event
-      .filter(v => v.type === 9 && v)
-      .map(v => v.deltaTime * timeFactor);
-
-    // If starting at the beginning
-    if (this.chunkDurationsInSeconds[0] === 0) {
-      this.chunkDurationsInSeconds.shift();
+      // Just the track 1 note on events for any channel
+      this.chunkDurationsInSeconds = midi.track[0].event
+        .filter(v => v.type === 9 && v)
+        .map(v => v.deltaTime * timeFactor);
+      // If starting at the beginning
+      if (this.chunkDurationsInSeconds[0] === 0) {
+        this.chunkDurationsInSeconds.shift();
+      }
+    }
+    else if (options.midi instanceof Array) {
+      this.chunkDurationsInSeconds = options.midi;
     }
 
     this.log('Events:', this.chunkDurationsInSeconds);
 
     this.metaBuffers = [];
-
-    this.waveFilePaths.forEach((wavPath) => {
-      const buffer = this.reader.loadBuffer(wavPath);
-      const metaBuffer = this.reader.interpretHeaders(buffer);
+    this.waveFilePaths.forEach((wavPath, index) => {
+      const metaBuffer = this.reader.loadMetaBuffer(wavPath);
+      if (index > 0) {
+        [
+          'dataStart', 'dataLength', 'numberOfChannels',
+          'sampleRate', 'secToByteFactor', 'bitPerSample'
+        ].forEach(key => {
+          if (metaBuffer[key] !== this.metaBuffers[0][key]) {
+            throw new RangeError('Files are not of the same format.');
+          }
+        });
+      }
       this.metaBuffers.push(metaBuffer);
-      console.log(metaBuffer);
     });
+    this.log(this.metaBuffers);
 
     this.log('\n--------------------------\n');
     this.totalDurationInSeconds = this.metaBuffers[0].dataLength / this.metaBuffers[0].secToByteFactor;
@@ -71,7 +83,6 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
       this.chunkIndex = 0;
 
       while (this.chunkStartInSeconds < this.totalDurationInSeconds) {
-        this.log('\n\n########### ', this.chunkIndex, this.chunkStartInSeconds);
         this._processChunk();
         this.chunkIndex++;
       }
@@ -81,10 +92,13 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
       }
 
       this.log('\n--------------------------\n');
-      this.log('DONE: this.chunkStartInSeconds=%d this.totalDurationInSeconds=%d', this.chunkStartInSeconds, this.totalDurationInSeconds);
+      this.log('DONE: chunkStartInSeconds=%d this.totalDurationInSeconds=%d', this.chunkStartInSeconds, this.totalDurationInSeconds);
 
       fs.writeFileSync(this.outputPath,
-        Buffer.concat([this.headBuffer, this.collectedBuffer], this.headBuffer.length + this.collectedBuffer.length),
+        Buffer.concat(
+          [this.headBuffer, this.collectedBuffer],
+          this.headBuffer.length + this.collectedBuffer.length
+        ),
         {
           encoding: 'binary'
         }
@@ -100,7 +114,7 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
       this.chunkDurationsInSeconds[this.chunkIndex % this.chunkDurationsInSeconds.length],
       this.totalDurationInSeconds - this.chunkStartInSeconds
     );
-    this.log('\n------ chunkIndex: %d; buffer: %d', this.chunkIndex, this.chunkIndex % this.metaBuffers.length);
+    this.log('\nchunkIndex: %d; buffer: %d', this.chunkIndex, this.chunkIndex % this.metaBuffers.length);
     this.log('From %ds for chunkDurationInSeconds %ds', this.chunkStartInSeconds, chunkDurationInSeconds);
 
     // define start, end offsets
@@ -110,27 +124,28 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
     // tweek start / stop offset times to make sure they do not fall in the middle of a sample's bits
     if (this.chunkIndex !== 0) {
       let initStartBitOffset = chunkStartBitIndex % metaBuffer.bitPerSample;
-      if (initStartBitOffset !== chunkStartBitIndex) {
-        chunkStartBitIndex = initStartBitOffset +
-          (Math.floor(chunkStartBitIndex / metaBuffer.bitPerSample) * metaBuffer.bitPerSample);
-      }
+      chunkStartBitIndex = initStartBitOffset +
+        (Math.floor(chunkStartBitIndex / metaBuffer.bitPerSample) * metaBuffer.bitPerSample);
     }
+
+    let initEndBitOffset = chunkEndBitIndex % metaBuffer.bitPerSample;
+    chunkEndBitIndex = initEndBitOffset +
+      (Math.floor(chunkEndBitIndex / metaBuffer.bitPerSample) * metaBuffer.bitPerSample);
 
     chunkEndBitIndex = Math.ceil(chunkEndBitIndex / metaBuffer.bitPerSample) * metaBuffer.bitPerSample;
     // reduce if above file duration
     chunkEndBitIndex = Math.min(chunkEndBitIndex, metaBuffer.dataStart + metaBuffer.dataLength);
 
-    this.log('chunkStartBitIndex', chunkStartBitIndex);
-    this.log('chunkEndBitIndex', chunkEndBitIndex);
+    this.log('bit index ', chunkStartBitIndex, 'to', chunkEndBitIndex);
 
     if (USE_ORIG_HEADER && this.headBuffer === null) {
-      this.headBuffer = metaBuffer.buffer.slice(0, 44);
+      this.headBuffer = metaBuffer.buffer.slice(0, this.metaBuffers[0].dataStart);
     }
 
-    const dataBuffer = metaBuffer.buffer.slice(
-      parseInt(chunkStartBitIndex),
-      parseInt(chunkEndBitIndex)
-    );
+    // chunkStartBitIndex = Math.floor(chunkStartBitIndex);
+    // chunkEndBitIndex = Math.floor(chunkEndBitIndex);
+
+    const dataBuffer = metaBuffer.buffer.slice(chunkStartBitIndex, chunkEndBitIndex);
 
     this.collectedBuffer = this.collectedBuffer === null ? dataBuffer
       : Buffer.concat(
@@ -138,18 +153,20 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
         this.collectedBuffer.length + dataBuffer.length
       );
 
+    console.log('X1: ', this.chunkStartInSeconds, chunkDurationInSeconds);
     this.chunkStartInSeconds += chunkDurationInSeconds;
+    console.log('X2: ', this.chunkStartInSeconds);
 
     this.log('Copied', metaBuffer.filePath, this.chunkStartInSeconds, 'of', this.totalDurationInSeconds);
     if (this.chunkStartInSeconds > this.totalDurationInSeconds) {
-      this.log('------this.chunkStartInSeconds >= this.totalDurationInSeconds', this.chunkStartInSeconds, this.totalDurationInSeconds);
+      this.log('this.chunkStartInSeconds >= this.totalDurationInSeconds', this.chunkStartInSeconds, this.totalDurationInSeconds);
       throw new Error('oops');
     }
   }
 
   _setHeader() {
-    this.headBuffer = Buffer.alloc(44);
-    const FILE_SIZE = this.collectedBuffer.length + 44;
+    this.headBuffer = Buffer.alloc(this.metaBuffers[0].dataStart);
+    const FILE_SIZE = this.collectedBuffer.length + this.metaBuffers[0].dataStart;
     const BIT_DEPTH = this.metaBuffers[0].bitPerSample;
 
     // this.headBuffer.write('RIFF', 0);
@@ -171,9 +188,9 @@ exports.MIDIslicer = class MIDIslicer extends Slicer {
     // this.headBuffer.writeBigUInt64LE(BigInt(this.metaBuffers[0].sampleRate), 24, 2);
 
     this.headBuffer.writeUIntLE(
-      (this.metaBuffers[0].sampleRate * BIT_DEPTH * this.metaBuffers[0].numberOfChannels)
-      / 8
-      , 28, 4);
+      (this.metaBuffers[0].sampleRate * BIT_DEPTH * this.metaBuffers[0].numberOfChannels) / 8,
+      28, 4
+    );
     // this.headBuffer.writeBigUInt64LE(BigInt((this.metaBuffers[0].sampleRate * BIT_SIZE * this.metaBuffers[0].numberOfChannels) / 8), 28, 4);
 
     this.headBuffer.writeUIntLE((BIT_DEPTH * this.metaBuffers[0].numberOfChannels) / 8, 32, 2);
@@ -191,12 +208,10 @@ class Reader {
     this.wavFormatReader = new WavFormatReader();
   }
 
-  loadBuffer(filePath) {
+  loadMetaBuffer(filePath) {
     this.filePath = filePath;
-    return fs.readFileSync(filePath);
-  }
+    const buffer = fs.readFileSync(filePath);
 
-  interpretHeaders(buffer) {
     let wavInfo = this.wavFormatReader.getWavInfos(buffer);
     console.log('data starts at ', wavInfo.descriptors.get('data').start, ' for ', wavInfo.descriptors.get('data').length);
     return {
@@ -209,5 +224,8 @@ class Reader {
       secToByteFactor: wavInfo.format.secToByteFactor,
       bitPerSample: wavInfo.format.bitPerSample
     };
+  }
+
+  interpretHeaders(buffer) {
   }
 }

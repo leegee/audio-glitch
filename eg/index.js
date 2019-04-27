@@ -3,8 +3,9 @@ const MIDIslicer = require('../src/MIDIslicer.mjs').MIDIslicer;
 const args = {
   verbose: true,
   bpm: 100,
-  midi: 'eg/test.mid',
-  wav: ['eg/1.wav', 'eg/2.wav', 'eg/3.wav']
+  // midi: 'eg/test.mid',
+  midi: [1, 1, 1, 1],
+  wav: ['eg/0.wav', 'eg/1.wav', 'eg/2.wav'],
 };
 
 let slicer = new MIDIslicer({
