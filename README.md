@@ -12,6 +12,12 @@ A command line interface and API are provided, along with an example. Arguments 
 node bin/glitch.js --midi eg/test.mid --wav eg/1.wav --wav eg/2.wav
 ```
 
+### Example
+
+```bash
+node eg
+```
+
 ### API
 
 ```javascript
