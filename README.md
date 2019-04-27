@@ -4,17 +4,19 @@ Uses the rhythm from a MIDI file to slice a number of WAV files.
 
 Reads just the track 0 note-on events of any channel.
 
-### CLI Argumnets: 
+### Argumnets: 
 
 <dl>
-  <dt>midi (string|array)</dt>
-  <dd>If a string, path to the MIDI file; if array, a list of timings in seconds.</dd>
-  <dt>wav (string)</dt>
-  <dd>Path to a `WAV` file. Repeat many times. All wave files should be of the same duration, same sample rate, bit depth, number of channels.</dd>
-  <dt>verbose (boolean)</dt>
-  <dd>Logging</dd>
+  <dt>bpm</dt>
+  <dd>(Number) MIDI does not provide this, so you should. Default is the standard 120</dd>
+  <dt>midi</dt>
+  <dd>(String|Array) If a string, path to the MIDI file; if an array, a list of timings in seconds.</dd>
+  <dt>wav</dt>
+  <dd>(Array<string>) Path(s) to WAV file(s). All wave files should be of the same duration, same sample rate, bit depth, number of channels.</dd>
+  <dt>verbose</dt>
+  <dd>(Boolean) Logging</dd>
 </dl>
 
-## Thanks
+## Acknowledgements
 
-A sub-class David Poirier-Quinot's `node-audio-slicer`.
+Based on the work of David Poirier-Quinot in `node-audio-slicer`.

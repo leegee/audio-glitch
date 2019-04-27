@@ -10,14 +10,8 @@ const args = {
   output: 'eg/output.wav'
 };
 
-let slicer = new MIDIslicer({
-  midi: args.midi,
-  bpm: args.bpm,
-  verbose: args.verbose,
-  waveFilePaths: args.wav,
-  output: args.output
-});
-
-slicer.slice().then(finalPath => {
-  console.log('Glitch file at ', path.resolve(finalPath));
-});
+new MIDIslicer(args)
+  .slice()
+  .then(finalPath => {
+    console.log('Glitch file at ', path.resolve(finalPath));
+  });

@@ -14,13 +14,10 @@ const args = minimist(process.argv.slice(2), {
   boolean: ['verbose']
 });
 
-new MIDIslicer({
-  midi: args.midi,
-  verbose: args.verbose,
-  output: args.output,
-  waveFilePaths: args.wav
-}).slice().then(finalPath => {
-  process.stdout.write('Glitch file at ',
-    path.resolve(finalPath)
-  )
-});
+new MIDIslicer(args)
+  .slice()
+  .then(finalPath => {
+    process.stdout.write(
+      '\nGlitch file at ' + path.resolve(finalPath) + '\n'
+    );
+  });

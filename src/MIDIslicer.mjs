@@ -17,12 +17,12 @@ module.exports = class MIDIslicer {
     if (!options.midi) {
       throw new TypeError('Missing midi argument: use a string to describe the path to the MIDI "beat" file, or supply beats as an array of numbers.');
     }
-    if (!options.waveFilePaths) {
-      throw new TypeError('Missing waveFilePaths array argument to describe path(s) to the wave files.');
+    if (!options.wav) {
+      throw new TypeError('Missing wav array argument to describe path(s) to the wave files.');
     }
     options.bpm = options.bpm || 120;
     this.midiFilePath = options.midi;
-    this.waveFilePaths = options.waveFilePaths;
+    this.wav = options.wav;
     this.reader = new Reader();
 
     if (typeof options.midi === 'string') {
@@ -56,7 +56,7 @@ module.exports = class MIDIslicer {
     this.log('Events:', this.chunkDurationsInSeconds);
 
     this.metaBuffers = [];
-    this.waveFilePaths.forEach((wavPath, index) => {
+    this.wav.forEach((wavPath, index) => {
       const metaBuffer = this.reader.loadMetaBuffer(wavPath);
       if (index > 0) {
         ['dataStart', 'dataLength', 'numberOfChannels',
