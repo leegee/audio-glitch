@@ -16,6 +16,9 @@ module.exports = class MIDIslicer {
    * @param {string|array} options.midi - path to midi or array of floats for beats
    */
   constructor(options = {}) {
+    if (!options.bpm) {
+      throw new TypeError('Missing bpm argument.');
+    }
     if (!options.midi) {
       throw new TypeError('Missing midi argument: use a string to describe the path to the MIDI "beat" file, or supply beats as an array of numbers.');
     }
@@ -27,7 +30,6 @@ module.exports = class MIDIslicer {
     }
 
     this.log = options.verbose ? console.log : () => { };
-    options.bpm = options.bpm || 120;
     this.midiFilePath = options.midi;
     this.wav = options.wav;
     this.reader = new Reader();
@@ -136,27 +138,26 @@ module.exports = class MIDIslicer {
     });
   }
 
+  // Gets a chunk of the required length for the current MIDI duration, as whole samples.
   _getChunk() {
     const metaBuffer = this.metaBuffers[this.chunkIndex % this.metaBuffers.length];
-    // In case final chunk shorter duration than requested.
-    const chunkDurationInSeconds = Math.min(
+
+    const chunkSeconds = Math.min(
       this.chunkSeconds[this.chunkIndex % this.chunkSeconds.length],
       this.totalSeconds - this.startSeconds
     );
+
     this.log('\nchunkIndex: %d; buffer: %d', this.chunkIndex, this.chunkIndex % this.metaBuffers.length);
-    this.log('From %ds for chunkDurationInSeconds %ds', this.startSeconds, chunkDurationInSeconds);
+    this.log('From %ds for chunkDurationInSeconds %ds', this.startSeconds, chunkSeconds);
 
     let startBit = (this.startSeconds * metaBuffer.secToByteFactor);
-
     let startBitOffset = startBit % metaBuffer.bitPerSample;
-
     startBit = startBitOffset +
       (Math.floor(startBit / metaBuffer.bitPerSample) * metaBuffer.bitPerSample);
 
     startBit += metaBuffer.dataStart;
 
-
-    let endBit = startBit + (chunkDurationInSeconds * metaBuffer.secToByteFactor);
+    let endBit = startBit + (chunkSeconds * metaBuffer.secToByteFactor);
     endBit = Math.floor(endBit);
 
     endBit = (endBit % metaBuffer.bitPerSample) +
@@ -167,13 +168,13 @@ module.exports = class MIDIslicer {
       endBit = Math.floor(Math.min(endBit, metaBuffer.dataStart + metaBuffer.dataLength - metaBuffer.bitPerSample));
     }
 
-    this.log('bit index ', startBit, 'to', endBit);
+    this.log('Bit range from %d to %d', startBit, endBit);
 
     if (USE_ORIG_HEADER && this.headBuffer === null) {
       this.headBuffer = metaBuffer.buffer.slice(0, this.metaBuffers[0].dataStart);
     }
 
-    let dataBuffer = metaBuffer.buffer.slice(startBit, endBit);
+    const dataBuffer = metaBuffer.buffer.slice(startBit, endBit);
 
     this.collectedBuffer = this.collectedBuffer === null ? dataBuffer
       : Buffer.concat(
@@ -181,7 +182,7 @@ module.exports = class MIDIslicer {
         this.collectedBuffer.length + dataBuffer.length
       );
 
-    this.startSeconds += chunkDurationInSeconds;
+    this.startSeconds += chunkSeconds;
 
     this.log('Copied', metaBuffer.filePath, this.startSeconds, 'of', this.totalSeconds);
     console.assert(this.startSeconds <= this.totalSeconds,

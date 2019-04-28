@@ -44,7 +44,7 @@ new MIDIslicer(args)
 
 <dl>
   <dt>bpm</dt>
-  <dd>(Number) MIDI does not provide this, so you should. Default is the standard 120</dd>
+  <dd>(Number) MIDI does not provide this, so you should.</dd>
   <dt>midi</dt>
   <dd>(String|Array) If a string, path to the MIDI file; if an array, a list of timings in seconds.</dd>
   <dt>wav</dt>
@@ -62,4 +62,4 @@ I've no plan to update this, since I produce my wavs at the same time from the s
 
 ## Acknowledgements
 
-Based on the work of David Poirier-Quinot in `node-audio-slicer`.
+Based in part on the work of David Poirier-Quinot in `node-audio-slicer`.
