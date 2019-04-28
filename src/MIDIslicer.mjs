@@ -48,12 +48,12 @@ module.exports = class MIDIslicer {
 
       // Just the track 1 note on events for any channel
       let noteDur = 0;
-      this.chunkDurationsInSeconds = midi.track[0].event
+      this.chunkSeconds = midi.track[0].event
         .filter(v => {
           if (v.type === NOTE_ON) {
             noteDur = v.deltaTime;
             this.log('on', noteDur, v);
-          } 
+          }
           else if (v.type === NOTE_OFF) {
             noteDur += v.deltaTime;
             v.noteDur = noteDur;
@@ -71,8 +71,8 @@ module.exports = class MIDIslicer {
 
     else if (options.midi instanceof Array) {
       this.outputPath = options.output || 'glitch.wav';
-      this.chunkDurationsInSeconds = options.midi;
-      totalMidiDurationInSeconds = Math.sum(this.chunkDurationsInSeconds);
+      this.chunkSeconds = options.midi;
+      totalMidiDurationInSeconds = Math.sum(this.chunkSeconds);
     }
 
     this.metaBuffers = [];
@@ -90,13 +90,13 @@ module.exports = class MIDIslicer {
       this.metaBuffers.push(metaBuffer);
     });
 
-    this.totalDurationInSeconds = this.metaBuffers[0].dataLength / this.metaBuffers[0].secToByteFactor;
+    this.totalSeconds = this.metaBuffers[0].dataLength / this.metaBuffers[0].secToByteFactor;
 
     this.log('\n--------------------------\n');
     this.log(this.metaBuffers);
     this.log('\n--------------------------\n');
-    this.log('chunkDurations', this.chunkDurationsInSeconds);
-    this.log('totalDurationInSeconds: ', this.totalDurationInSeconds);
+    this.log('chunkDurations', this.chunkSeconds);
+    this.log('totalDurationInSeconds: ', this.totalSeconds);
     this.log('totalMidiDurationInSeconds: ', totalMidiDurationInSeconds);
     this.log('\n--------------------------\n');
   }
@@ -108,10 +108,10 @@ module.exports = class MIDIslicer {
     return new Promise((resolve, reject) => {
       this.headBuffer = null;
       this.collectedBuffer = null;
-      this.chunkStartInSeconds = 0;
+      this.startSeconds = 0;
       this.chunkIndex = 0;
 
-      while (this.chunkStartInSeconds < this.totalDurationInSeconds) {
+      while (this.startSeconds < this.totalSeconds) {
         this._getChunk();
         this.chunkIndex++;
       }
@@ -121,7 +121,7 @@ module.exports = class MIDIslicer {
       }
 
       this.log('\n--------------------------\n');
-      this.log('DONE: chunkStartInSeconds=%d this.totalDurationInSeconds=%d', this.chunkStartInSeconds, this.totalDurationInSeconds);
+      this.log('DONE: chunkStartInSeconds=%d this.totalDurationInSeconds=%d', this.startSeconds, this.totalSeconds);
 
       fs.writeFileSync(this.outputPath,
         Buffer.concat(
@@ -140,42 +140,40 @@ module.exports = class MIDIslicer {
     const metaBuffer = this.metaBuffers[this.chunkIndex % this.metaBuffers.length];
     // In case final chunk shorter duration than requested.
     const chunkDurationInSeconds = Math.min(
-      this.chunkDurationsInSeconds[this.chunkIndex % this.chunkDurationsInSeconds.length],
-      this.totalDurationInSeconds - this.chunkStartInSeconds
+      this.chunkSeconds[this.chunkIndex % this.chunkSeconds.length],
+      this.totalSeconds - this.startSeconds
     );
     this.log('\nchunkIndex: %d; buffer: %d', this.chunkIndex, this.chunkIndex % this.metaBuffers.length);
-    this.log('From %ds for chunkDurationInSeconds %ds', this.chunkStartInSeconds, chunkDurationInSeconds);
+    this.log('From %ds for chunkDurationInSeconds %ds', this.startSeconds, chunkDurationInSeconds);
 
-    let chunkStartBitIndex = (this.chunkStartInSeconds * metaBuffer.secToByteFactor);
-    // chunkStartBitIndex = // initStartBitOffset +
-    //   (Math.floor(chunkStartBitIndex / metaBuffer.bitPerSample) * metaBuffer.bitPerSample);
-    // chunkStartBitIndex += metaBuffer.dataStart;
+    let startBit = (this.startSeconds * metaBuffer.secToByteFactor);
 
-    // if (this.chunkIndex !== 0) {
-    let initStartBitOffset = chunkStartBitIndex % metaBuffer.bitPerSample;
-    chunkStartBitIndex = initStartBitOffset +
-      (Math.floor(chunkStartBitIndex / metaBuffer.bitPerSample) * metaBuffer.bitPerSample);
-      chunkStartBitIndex += metaBuffer.dataStart;
-    // }
+    let startBitOffset = startBit % metaBuffer.bitPerSample;
 
-    let chunkEndBitIndex = chunkStartBitIndex + (chunkDurationInSeconds * metaBuffer.secToByteFactor);
-    chunkEndBitIndex = Math.floor(chunkEndBitIndex);
+    startBit = startBitOffset +
+      (Math.floor(startBit / metaBuffer.bitPerSample) * metaBuffer.bitPerSample);
 
-    chunkEndBitIndex = (chunkEndBitIndex % metaBuffer.bitPerSample) +
-      Math.floor(chunkEndBitIndex / metaBuffer.bitPerSample) * metaBuffer.bitPerSample;
+    startBit += metaBuffer.dataStart;
+
+
+    let endBit = startBit + (chunkDurationInSeconds * metaBuffer.secToByteFactor);
+    endBit = Math.floor(endBit);
+
+    endBit = (endBit % metaBuffer.bitPerSample) +
+      Math.floor(endBit / metaBuffer.bitPerSample) * metaBuffer.bitPerSample;
 
     // reduce if above file duration
-    if (chunkEndBitIndex > metaBuffer.dataStart + metaBuffer.dataLength - metaBuffer.bitPerSample) {
-      chunkEndBitIndex = Math.floor(Math.min(chunkEndBitIndex, metaBuffer.dataStart + metaBuffer.dataLength - metaBuffer.bitPerSample));
+    if (endBit > metaBuffer.dataStart + metaBuffer.dataLength - metaBuffer.bitPerSample) {
+      endBit = Math.floor(Math.min(endBit, metaBuffer.dataStart + metaBuffer.dataLength - metaBuffer.bitPerSample));
     }
 
-    this.log('bit index ', chunkStartBitIndex, 'to', chunkEndBitIndex);
+    this.log('bit index ', startBit, 'to', endBit);
 
     if (USE_ORIG_HEADER && this.headBuffer === null) {
       this.headBuffer = metaBuffer.buffer.slice(0, this.metaBuffers[0].dataStart);
     }
 
-    let dataBuffer = metaBuffer.buffer.slice(chunkStartBitIndex, chunkEndBitIndex);
+    let dataBuffer = metaBuffer.buffer.slice(startBit, endBit);
 
     this.collectedBuffer = this.collectedBuffer === null ? dataBuffer
       : Buffer.concat(
@@ -183,11 +181,11 @@ module.exports = class MIDIslicer {
         this.collectedBuffer.length + dataBuffer.length
       );
 
-    this.chunkStartInSeconds += chunkDurationInSeconds;
+    this.startSeconds += chunkDurationInSeconds;
 
-    this.log('Copied', metaBuffer.filePath, this.chunkStartInSeconds, 'of', this.totalDurationInSeconds);
-    console.assert(this.chunkStartInSeconds <= this.totalDurationInSeconds,
-      'Internal chunk timing error! chunkStart exceeds totalDuration: ' + this.chunkStartInSeconds + ' > ' + this.totalDurationInSeconds
+    this.log('Copied', metaBuffer.filePath, this.startSeconds, 'of', this.totalSeconds);
+    console.assert(this.startSeconds <= this.totalSeconds,
+      'Internal chunk timing error! chunkStart exceeds totalDuration: ' + this.startSeconds + ' > ' + this.totalSeconds
     );
   }
 
@@ -201,9 +199,9 @@ module.exports = class MIDIslicer {
     this.headBuffer.write('RIFF', 0);
     this.headBuffer.writeUIntLE(FILE_SIZE - 8, 4, 4);
     this.headBuffer.write('WAVE', 8);
-    this.headBuffer.write('fmt ', 12); // Init 'format' section
-    this.headBuffer.writeUIntLE(16, 16, 4); // Length of format data - always 16
-    this.headBuffer.writeUIntLE(1, 20, 2); // Type: PCM
+    this.headBuffer.write('fmt ', 12);
+    this.headBuffer.writeUIntLE(16, 16, 4); // Length of format data is 16. silly spec.
+    this.headBuffer.writeUIntLE(1, 20, 2); // Set 'type' to  gblkmtgbkjregijaher zoj grok ryot PCM
     this.headBuffer.writeUIntLE(this.metaBuffers[0].numberOfChannels, 22, 2);
     this.headBuffer.writeBigUInt64LE(BigInt(this.metaBuffers[0].sampleRate), 24, 2);
     this.headBuffer.writeBigUInt64LE(

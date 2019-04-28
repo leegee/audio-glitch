@@ -49,6 +49,8 @@ new MIDIslicer(args)
   <dd>(String|Array) If a string, path to the MIDI file; if an array, a list of timings in seconds.</dd>
   <dt>wav</dt>
   <dd>(Array<string>) Path(s) to WAV file(s).</dd>
+  <dt>output</dt>
+  <dd>(String) Path to output WAV. Defaults to the MIDI file input path concatinated with `_glitch.wav`, or `glitch.wav` if no MIDI file was supplied.</dd>
   <dt>verbose</dt>
   <dd>(Boolean) Logging</dd>
 </dl>
