@@ -6,6 +6,11 @@ const Reader = require('./Reader.mjs');
 const USE_ORIG_HEADER = false;
 const NOTE_ON = 9;
 const NOTE_OFF = 8;
+const REQ_ARGS = {
+  bpm: '"bpm" as a number',
+  midi: '"midi" should be a string to describe the path to the MIDI "beat" file, or an array of numbers to indicate split locations in seconds',
+  wav: '"wave" should be an array to describe path(s) to the wave files'
+}
 
 module.exports = class MIDIslicer {
   /**
@@ -16,14 +21,14 @@ module.exports = class MIDIslicer {
    * @param {string|array} options.midi - path to midi or array of floats for beats
    */
   constructor(options = {}) {
-    if (!options.bpm) {
-      throw new TypeError('Missing bpm argument.');
-    }
-    if (!options.midi) {
-      throw new TypeError('Missing midi argument: use a string to describe the path to the MIDI "beat" file, or supply beats as an array of numbers.');
-    }
-    if (!options.wav) {
-      throw new TypeError('Missing wav array argument to describe path(s) to the wave files.');
+    let errMsgs = [];
+    Object.keys(REQ_ARGS).forEach(key => {
+      if (!options[key]) {
+        errMsgs.push(REQ_ARGS[key]);
+      }
+    });
+    if (errMsgs.length) {
+      throw new Error('Missing argument' + (errMsgs.length > 1 ? 's' : '') + ':\n' + errMsgs.join('\n\t'));
     }
     if (typeof options.wav === 'string') {
       options.wav = [options.wav];
@@ -42,7 +47,7 @@ module.exports = class MIDIslicer {
     else if (options.midi instanceof Array) {
       this.outputPath = options.output || 'glitch.wav';
       this.chunkSeconds = options.midi;
-      totalMidiDurationInSeconds = Math.sum(this.chunkSeconds);
+      totalMidiDurationInSeconds = this.chunkSeconds.reduce((a, b) => a + b, 0);
     }
 
     this._setMetaBuffers();
