@@ -35,19 +35,18 @@ module.exports = class MIDIslicer {
     }
 
     this.log = options.verbose ? console.log : () => { };
-    this.midiFilePath = options.midi;
+    this.midi = options.midi;
     this.wav = options.wav;
     this.reader = new Reader();
-    let totalMidiDurationInSeconds;
 
     if (typeof options.midi === 'string') {
-      totalMidiDurationInSeconds = this._loadMidiFile(options);
+      this.totalMidiDurationInSeconds = this._loadMidiFile(options);
     }
 
     else if (options.midi instanceof Array) {
       this.outputPath = options.output || 'glitch.wav';
       this.chunkSeconds = options.midi;
-      totalMidiDurationInSeconds = this.chunkSeconds.reduce((a, b) => a + b, 0);
+      this.totalMidiDurationInSeconds = this.chunkSeconds.reduce((a, b) => a + b, 0);
     }
 
     this._setMetaBuffers();
@@ -58,12 +57,12 @@ module.exports = class MIDIslicer {
     this.log('\n--------------------------\n');
     this.log('chunkDurations', this.chunkSeconds);
     this.log('totalDurationInSeconds: ', this.totalSeconds);
-    this.log('totalMidiDurationInSeconds: ', totalMidiDurationInSeconds);
+    this.log('totalMidiDurationInSeconds: ', this.totalMidiDurationInSeconds);
     this.log('\n--------------------------\n');
   }
 
   _loadMidiFile(options) {
-    this.outputPath = options.output || this.midiFilePath + '_glitch.wav';
+    this.outputPath = options.output || this.midi + '_glitch.wav';
     const midi = MidiParser.parse(fs.readFileSync(options.midi)); // , 'base64'
     const ppq = midi.timeDivision;
     const timeFactor = (60000 / (options.bpm * ppq) / 1000);
@@ -73,7 +72,7 @@ module.exports = class MIDIslicer {
     this.log('timeFactor:', timeFactor);
 
     let noteDur = 0;
-    let totalMidiDurationInSeconds = 0;
+    let totalMidiDurationInSeconds = 0; // public for tests only
 
     // Just the track 1 note on events for any channel
     this.chunkSeconds = midi.track[0].event

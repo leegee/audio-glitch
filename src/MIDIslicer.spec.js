@@ -17,7 +17,7 @@ describe('MIDIslicer', () => {
         });
     });
 
-    it('with MIDI beats array, creates a wav a specified location', async () => {
+    it('with MIDI beats array, creates a wav at a specified location', async () => {
         const tmpFileName = tmp.tmpNameSync();
         expect(fs.existsSync(tmpFileName), 'temp file name').to.be.false;
 
@@ -31,7 +31,7 @@ describe('MIDIslicer', () => {
         expect(fs.existsSync(outputPath)).to.be.true;
     });
 
-    it('with MIDI file, creates a wav a specified location', async () => {
+    it('with MIDI file, creates a wav at a specified location', async () => {
         const tmpFileName = tmp.tmpNameSync();
         expect(fs.existsSync(tmpFileName), 'temp file name').to.be.false;
 
@@ -45,7 +45,7 @@ describe('MIDIslicer', () => {
         expect(fs.existsSync(outputPath)).to.be.true;
     });
 
-    it('with MIDI beats array, creates a wav a auto location', async () => {
+    it('with MIDI beats array, creates a wav at an auto location', async () => {
         const ms = new MIDIslicer({
             bpm: 80,
             wav: ['eg/0.wav', 'eg/1.wav'],
@@ -57,7 +57,7 @@ describe('MIDIslicer', () => {
         fs.unlinkSync(outputPath);
     });
 
-    it('with MIDI file, creates a wav a specified location', async () => {
+    it('with MIDI file, creates a wav at an auto location', async () => {
         const ms = new MIDIslicer({
             bpm: 80,
             wav: ['eg/0.wav', 'eg/1.wav'],
@@ -69,18 +69,17 @@ describe('MIDIslicer', () => {
         fs.unlinkSync(outputPath);
     });
 
-});
+    it('generates chunks', async () => {
+        const n = 5, v = 1;
+        const tmpFileName = tmp.tmpNameSync();
+        const ms = new MIDIslicer({
+            bpm: 80,
+            wav: ['eg/0.wav', 'eg/1.wav'],
+            midi: new Array(n).fill(v),
+            output: tmpFileName
+        });
+        expect(ms.totalMidiDurationInSeconds).to.equal(n * v);
+        expect(ms.totalSeconds).to.equal(4.363645833333333);
+    });
 
-// new MIDIslicer({
-//   verbose: true,
-//   bpm: 110,
-//   midi: 'eg/test.mid',
-//   // midi: [1, 1, 1, 1],
-//   // wav: ['eg/0.wav', 'eg/1.wav', 'eg/2.wav', 'eg/3.wav'],
-//   wav: ['eg/one-note-high.wav', 'eg/one-note-low.wav',],
-//   output: 'eg/output.wav'
-// })
-//   .slice()
-//   .then(outputPath => {
-//     console.log('Glitch file at ', path.resolve(outputPath));
-//   });
+});
