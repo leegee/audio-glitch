@@ -33,42 +33,10 @@ module.exports = class MIDIslicer {
     this.midiFilePath = options.midi;
     this.wav = options.wav;
     this.reader = new Reader();
-    let totalMidiDurationInSeconds = 0;
+    let totalMidiDurationInSeconds;
 
     if (typeof options.midi === 'string') {
-      this.outputPath = options.output || this.midiFilePath + '_glitch.wav';
-      const midi = MidiParser.parse(fs.readFileSync(options.midi, 'base64'));
-      const ppq = midi.timeDivision;
-      // TODO wtf? Not the spec.... '*2'??
-      const timeFactor = (60000 / (options.bpm * ppq) / 1000);
-
-      this.log('bpm:', options.bpm);
-      this.log('ppq:', ppq);
-      this.log('(options.bpm * ppq)', (options.bpm * ppq));
-      this.log('MIDI.timeDivision', midi.timeDivision);
-      this.log('timeFactor', timeFactor);
-
-      // Just the track 1 note on events for any channel
-      let noteDur = 0;
-      this.chunkSeconds = midi.track[0].event
-        .filter(v => {
-          if (v.type === NOTE_ON) {
-            noteDur = v.deltaTime;
-            this.log('on', noteDur, v);
-          }
-          else if (v.type === NOTE_OFF) {
-            noteDur += v.deltaTime;
-            v.noteDur = noteDur;
-            this.log('off', noteDur, v);
-          }
-          return v.type === NOTE_OFF;
-        })
-        .map(v => {
-          const t = v.noteDur * timeFactor;
-          totalMidiDurationInSeconds += t;
-          this.log(v.noteDur, ':', t);
-          return t;
-        });
+      totalMidiDurationInSeconds = this._loadMidiFile(options);
     }
 
     else if (options.midi instanceof Array) {
@@ -77,6 +45,56 @@ module.exports = class MIDIslicer {
       totalMidiDurationInSeconds = Math.sum(this.chunkSeconds);
     }
 
+    this._setMetaBuffers();
+    this.totalSeconds = this.metaBuffers[0].dataLength / this.metaBuffers[0].secToByteFactor;
+
+    this.log('\n--------------------------\n');
+    this.log(this.metaBuffers);
+    this.log('\n--------------------------\n');
+    this.log('chunkDurations', this.chunkSeconds);
+    this.log('totalDurationInSeconds: ', this.totalSeconds);
+    this.log('totalMidiDurationInSeconds: ', totalMidiDurationInSeconds);
+    this.log('\n--------------------------\n');
+  }
+
+  _loadMidiFile(options) {
+    this.outputPath = options.output || this.midiFilePath + '_glitch.wav';
+    const midi = MidiParser.parse(fs.readFileSync(options.midi)); // , 'base64'
+    const ppq = midi.timeDivision;
+    const timeFactor = (60000 / (options.bpm * ppq) / 1000);
+
+    this.log('BPM:%d, PPQ: %d', options.bpm, ppq);
+    this.log('MIDI.timeDivision:', midi.timeDivision);
+    this.log('timeFactor:', timeFactor);
+
+    let noteDur = 0;
+    let totalMidiDurationInSeconds = 0;
+
+    // Just the track 1 note on events for any channel
+    this.chunkSeconds = midi.track[0].event
+      .filter(v => {
+        if (v.type === NOTE_ON) {
+          noteDur = v.deltaTime;
+          this.log('on', noteDur, v);
+        }
+        else if (v.type === NOTE_OFF) {
+          noteDur += v.deltaTime;
+          v.noteDur = noteDur;
+          this.log('off', noteDur, v);
+        }
+        return v.type === NOTE_OFF;
+      })
+      .map(v => {
+        const t = v.noteDur * timeFactor;
+        totalMidiDurationInSeconds += t;
+        this.log(v.noteDur, ':', t);
+        return t;
+      });
+
+    return totalMidiDurationInSeconds;
+  }
+
+  _setMetaBuffers() {
     this.metaBuffers = [];
     this.wav.forEach((wavPath, index) => {
       const metaBuffer = this.reader.loadMetaBuffer(wavPath);
@@ -91,16 +109,6 @@ module.exports = class MIDIslicer {
       }
       this.metaBuffers.push(metaBuffer);
     });
-
-    this.totalSeconds = this.metaBuffers[0].dataLength / this.metaBuffers[0].secToByteFactor;
-
-    this.log('\n--------------------------\n');
-    this.log(this.metaBuffers);
-    this.log('\n--------------------------\n');
-    this.log('chunkDurations', this.chunkSeconds);
-    this.log('totalDurationInSeconds: ', this.totalSeconds);
-    this.log('totalMidiDurationInSeconds: ', totalMidiDurationInSeconds);
-    this.log('\n--------------------------\n');
   }
 
   /**
