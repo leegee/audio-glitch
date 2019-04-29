@@ -71,15 +71,17 @@ describe('MIDIslicer', () => {
 
     it('generates chunks', async () => {
         const n = 5, v = 1;
-        const tmpFileName = tmp.tmpNameSync();
         const ms = new MIDIslicer({
             bpm: 80,
             wav: ['eg/0.wav', 'eg/1.wav'],
             midi: new Array(n).fill(v),
-            output: tmpFileName
+            output: tmp.tmpNameSync()
         });
         expect(ms.totalMidiDurationInSeconds).to.equal(n * v);
         expect(ms.totalSeconds).to.equal(4.363645833333333);
+        await ms.slice();
+        expect(ms.playheadSeconds).to.equal(ms.totalSeconds);
+        expect(ms.chunkIndex).to.equal(n);
     });
 
 });

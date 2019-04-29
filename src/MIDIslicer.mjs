@@ -122,10 +122,10 @@ module.exports = class MIDIslicer {
     return new Promise((resolve, reject) => {
       this.headBuffer = null;
       this.collectedBuffer = null;
-      this.startSeconds = 0;
+      this.playheadSeconds = 0;
       this.chunkIndex = 0;
 
-      while (this.startSeconds < this.totalSeconds) {
+      while (this.playheadSeconds < this.totalSeconds) {
         this._getChunk();
         this.chunkIndex++;
       }
@@ -135,7 +135,7 @@ module.exports = class MIDIslicer {
       }
 
       this.log('\n--------------------------\n');
-      this.log('DONE: chunkStartInSeconds=%d this.totalDurationInSeconds=%d', this.startSeconds, this.totalSeconds);
+      this.log('DONE: chunkStartInSeconds=%d this.totalDurationInSeconds=%d', this.playheadSeconds, this.totalSeconds);
 
       fs.writeFileSync(this.outputPath,
         Buffer.concat(
@@ -156,13 +156,13 @@ module.exports = class MIDIslicer {
 
     const chunkSeconds = Math.min(
       this.chunkSeconds[this.chunkIndex % this.chunkSeconds.length],
-      this.totalSeconds - this.startSeconds
+      this.totalSeconds - this.playheadSeconds
     );
 
     this.log('\nchunkIndex: %d; buffer: %d', this.chunkIndex, this.chunkIndex % this.metaBuffers.length);
-    this.log('From %ds for chunkDurationInSeconds %ds', this.startSeconds, chunkSeconds);
+    this.log('From %ds for chunkDurationInSeconds %ds', this.playheadSeconds, chunkSeconds);
 
-    let startBit = (this.startSeconds * metaBuffer.secToByteFactor);
+    let startBit = (this.playheadSeconds * metaBuffer.secToByteFactor);
     let startBitOffset = startBit % metaBuffer.bitPerSample;
     startBit = startBitOffset +
       (Math.floor(startBit / metaBuffer.bitPerSample) * metaBuffer.bitPerSample);
@@ -194,11 +194,11 @@ module.exports = class MIDIslicer {
         this.collectedBuffer.length + dataBuffer.length
       );
 
-    this.startSeconds += chunkSeconds;
+    this.playheadSeconds += chunkSeconds;
 
-    this.log('Copied', metaBuffer.filePath, this.startSeconds, 'of', this.totalSeconds);
-    console.assert(this.startSeconds <= this.totalSeconds,
-      'Internal chunk timing error! chunkStart exceeds totalDuration: ' + this.startSeconds + ' > ' + this.totalSeconds
+    this.log('Copied', metaBuffer.filePath, this.playheadSeconds, 'of', this.totalSeconds);
+    console.assert(this.playheadSeconds <= this.totalSeconds,
+      'Internal chunk timing error! chunkStart exceeds totalDuration: ' + this.playheadSeconds + ' > ' + this.totalSeconds
     );
   }
 
