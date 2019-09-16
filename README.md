@@ -22,7 +22,7 @@ node eg
 
 ```javascript
 const path = require('path');
-const MIDIslicer = require('../src/MIDIslicer.mjs');
+const MIDIslicer = require('../src/slicer');
 
 const args = {
   verbose: true,

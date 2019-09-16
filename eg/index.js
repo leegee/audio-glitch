@@ -1,5 +1,5 @@
 const path = require('path');
-const MIDIslicer = require('../src');
+const MIDIslicer = require('../src/slicer');
 
 new MIDIslicer({
   verbose: true,

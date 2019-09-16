@@ -1,6 +1,6 @@
 const minimist = require('minimist');
 const path = require('path');
-const MIDIslicer = require('../src');
+const MIDIslicer = require('../src/slicer');
 
 const args = minimist(process.argv.slice(2), {
   string: ['bpm', 'midi', 'wav', 'output'],
