@@ -15,7 +15,7 @@
     "node": ">=12.0.0"
   },
   "bin": {
-    "hello": "./hello.js"
+    "slice": "./src/slicer"
   },
   "keywords": [
     "audio",
