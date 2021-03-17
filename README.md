@@ -21,8 +21,8 @@ node eg
 ### API
 
 ```javascript
-const path = require('path');
-const MIDIslicer = require('../src/slicer');
+import path from 'path';
+import  MIDIslicer from './src/slicer';
 
 const args = {
   verbose: true,
