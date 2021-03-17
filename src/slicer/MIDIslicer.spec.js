@@ -1,8 +1,9 @@
-const fs = require('fs');
-const tmp = require('tmp');
-const expect = require('chai').expect;
+import fs from 'fs';
+import tmp from 'tmp';
+import chai from 'chai';
+const expect = chai.expect;
 
-const MIDIslicer = require('./');
+import MIDIslicer from './MIDIslicer.mjs';
 
 describe('MIDIslicer', () => {
     it('loads', () => {
