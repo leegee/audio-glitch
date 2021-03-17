@@ -2,7 +2,7 @@ const BYTE_LENGTH = 4;
 
 // format info, see http://www.topherlee.com/software/pcm-tut-wavformat.html
 
-module.exports = class WavFormatReader {
+export default class WavFormatReader {
   getWavInfos(buffer) {
     // console.log('input buffer length', buffer.length);
     // get header descriptors

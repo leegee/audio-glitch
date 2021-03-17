@@ -1,7 +1,7 @@
 /* global BigInt */
-const fs = require('fs');
-const MidiParser = require('midi-parser-js/src/midi-parser');
-const Reader = require('./Reader.mjs');
+import fs from 'fs';
+import MidiParser from 'midi-parser-js/src/midi-parser.js';
+import Reader from './Reader.mjs';
 
 const USE_ORIG_HEADER = false;
 const NOTE_ON = 9;
@@ -12,7 +12,7 @@ const REQ_ARGS = {
   wav: '"wave" should be an array to describe path(s) to the wave files'
 }
 
-module.exports = class MIDIslicer {
+export default class MIDIslicer {
   /**
    * @param {Object} options
    * @param {boolean} options.verbose
@@ -44,7 +44,7 @@ module.exports = class MIDIslicer {
     }
 
     else if (options.midi instanceof Array) {
-      this.outputPath = options.output || 'glitch.wav';
+      this.outputpath = options.output || 'glitch.wav';
       this.chunkSeconds = options.midi;
       this.totalMidiDurationInSeconds = this.chunkSeconds.reduce((a, b) => a + b, 0);
     }
@@ -62,7 +62,7 @@ module.exports = class MIDIslicer {
   }
 
   _loadMidiFile(options) {
-    this.outputPath = options.output || this.midi + '_glitch.wav';
+    this.outputpath = options.output || this.midi + '_glitch.wav';
     const midi = MidiParser.parse(fs.readFileSync(options.midi)); // , 'base64'
     const ppq = midi.timeDivision;
     const timeFactor = (60000 / (options.bpm * ppq) / 1000);
@@ -137,7 +137,7 @@ module.exports = class MIDIslicer {
       this.log('\n--------------------------\n');
       this.log('DONE: chunkStartInSeconds=%d this.totalDurationInSeconds=%d', this.playheadSeconds, this.totalSeconds);
 
-      fs.writeFileSync(this.outputPath,
+      fs.writeFileSync(this.outputpath,
         Buffer.concat(
           [this.headBuffer, this.collectedBuffer],
           this.headBuffer.length + this.collectedBuffer.length
@@ -146,7 +146,7 @@ module.exports = class MIDIslicer {
           encoding: 'binary'
         }
       );
-      return resolve(this.outputPath);
+      return resolve(this.outputpath);
     });
   }
 

@@ -9,7 +9,7 @@ A command line interface and API are provided, along with an example. Arguments 
 ### CLI
 
 ```bash
-node bin/glitch.js --midi eg/test.mid --wav eg/1.wav --wav eg/2.wav
+node bin/glitch.js --bpm 127 --midi eg/test.mid --wav eg/1.wav --wav eg/2.wav
 ```
 
 ### Example
@@ -40,7 +40,7 @@ new MIDIslicer(args)
   });
 ```
 
-## Argumnets: 
+## Argumnets:
 
 <dl>
   <dt>bpm</dt>
@@ -57,7 +57,7 @@ new MIDIslicer(args)
 
 ## Caveats
 
-All wave files should be of the same duration, same sample rate, bit depth, number of channels. 
+All wave files should be of the same duration, same sample rate, bit depth, number of channels.
 I've no plan to update this, since I produce my wavs at the same time from the same source.
 
 ## Acknowledgements

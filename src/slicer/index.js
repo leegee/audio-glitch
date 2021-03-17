@@ -1,1 +1,1 @@
-module.exports = require('./MIDIslicer.mjs');
+export * from './MIDIslicer.mjs';

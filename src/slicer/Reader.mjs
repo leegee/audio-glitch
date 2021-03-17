@@ -1,7 +1,7 @@
-const fs = require('fs');
-const WavFormatReader = require('./WavFormatReader.mjs');
+import fs from 'fs';
+import WavFormatReader from './WavFormatReader.mjs';
 
-module.exports = class Reader {
+export default class Reader {
   constructor() {
     this.wavFormatReader = new WavFormatReader();
   }

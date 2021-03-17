@@ -1,6 +1,6 @@
-const minimist = require('minimist');
-const path = require('path');
-const MIDIslicer = require('../src/slicer');
+import minimist from 'minimist';
+import path from 'path';
+import MIDIslicer from '../src/slicer/MIDIslicer.mjs';
 
 const args = minimist(process.argv.slice(2), {
   string: ['bpm', 'midi', 'wav', 'output'],
