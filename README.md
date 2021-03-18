@@ -14,9 +14,7 @@ node bin/glitch.js --bpm 127 --midi eg/test.mid --wav eg/1.wav --wav eg/2.wav
 
 ### Example
 
-```bash
-node eg
-```
+`node eg` or `npm run eg`
 
 ### API
 

@@ -9,6 +9,7 @@
   "type": "module",
   "main": "src/slicer/index.js",
   "scripts": {
+    "eg": "node ./bin/glitch.js --bpm 127 --midi eg/test.mid --wav eg/1.wav --wav eg/2.wav",
     "test": "mocha src/**/*.spec.js"
   },
   "engineStrict": false,

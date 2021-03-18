@@ -4,10 +4,8 @@ const BYTE_LENGTH = 4;
 
 export default class WavFormatReader {
   getWavInfos(buffer) {
-    // console.log('input buffer length', buffer.length);
     // get header descriptors
     var descriptors = this.getWavDescriptors(buffer);
-    // console.log(descriptors);
     var format = this.getWavFormat(descriptors, buffer);
     return { descriptors, format };
   }
@@ -22,7 +20,6 @@ export default class WavFormatReader {
       weird: buffer.readUIntLE(fmt.start + 12, 2), // (BitsPerSample * Channels) / 8.1 - 8 bit mono2 - 8 bit stereo/16 bit mono4 - 16 bit stereo
       bitPerSample: buffer.readUIntLE(fmt.start + 14, 2)
     };
-    // console.log( format );
     return format;
   }
 

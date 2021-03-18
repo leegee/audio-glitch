@@ -2,7 +2,6 @@ import path from 'path';
 
 import MIDIslicer from '../src/slicer/MIDIslicer.mjs';
 
-
 new MIDIslicer({
   verbose: true,
   bpm: 110,
@@ -14,5 +13,5 @@ new MIDIslicer({
 })
   .slice()
   .then(outputPath => {
-    console.log('Glitch file at ', path.resolve(outputPath));
+    process.stdout.write('Glitch file at ', path.resolve(outputPath));
   });
