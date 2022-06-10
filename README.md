@@ -1,30 +1,19 @@
-# Audio Glitch
+# Audio Glitch - produce sliced and spliced WAVs from MIDI beats or a list of times
 
-## Synopsis
+## Description
 
-Produce sliced and spliced WAVs from MIDI beats or a list of times.
+Cyclically slices and splices any number of supplied wave files (`wav`) at the points specified by `midi`, which may be:
 
-## Use
-
-`glitch` uses the rhythm from a MIDI file's track 0 note-on events, regardless of channel, to slice and merge a number of WAV files.
-
+* either at the fractions of seconds specified
+* or at points specified by a MIDI file's track 0 note-on events, regardless of channel.
 
 A command line interface and API are provided, along with an example. Arguments are the same for all.
 
-### CLI
-
-```bash
-node node_modules./bin/glitch --bpm 127 --midi eg/test.mid --wav eg/0.wav --wav eg/1.wav --wav eg/2.wav
-```
-
-### Example
-
-`node eg` or `npm run eg`
+## Synopsis
 
 ### API
 
 ```javascript
-import path from 'path';
 import  MIDIslicer from './src/slicer';
 
 // Taking beats from a MIDI file:
@@ -48,11 +37,19 @@ const args = {
 new MIDIslicer(args)
   .slice()
   .then(finalPath => {
-    console.log('Glitch file at ', path.resolve(finalPath));
+    console.info('Glitch file saved at %s.', finalPath);
   });
 ```
 
-## Argumnets:
+### CLI
+
+```bash
+glitch --midi eg/test.mid \ 
+       --wav eg/0.wav     \
+       --wav eg/1.wav     \
+       --wav eg/2.wav     \
+       --bpm 127
+```
 
 <dl>
   <dt><code>bpm</code></dt>
@@ -66,6 +63,10 @@ new MIDIslicer(args)
   <dt><code>verbose</code></dt>
   <dd>(Boolean) Logging</dd>
 </dl>
+
+## Examples
+
+Run examples with `node eg` or `npm run eg`
 
 ## Caveats
 
