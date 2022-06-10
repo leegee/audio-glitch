@@ -1,6 +1,6 @@
 {
   "name": "audio-glitch",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Uses the rhythm from a MIDI file to slice a number of WAV files.",
   "repository": {
     "type": "git",
@@ -8,16 +8,22 @@
   },
   "type": "module",
   "main": "src/slicer/index.js",
+  "bin": {
+    "glitch": "./bin/glitch.js"
+  },
   "scripts": {
     "eg": "node ./bin/glitch.js --bpm 127 --midi eg/test.mid --wav eg/1.wav --wav eg/2.wav",
     "test": "mocha src/**/*.spec.js"
   },
+  "directories": {
+    "bin": "./bin",
+    "example": "./eg",
+    "lib": "./src",
+    "test": "./src"
+  },
   "engineStrict": false,
   "engines": {
     "node": ">=12.0.0"
-  },
-  "bin": {
-    "slice": "./src/slicer"
   },
   "keywords": [
     "audio",
